@@ -1,83 +1,58 @@
 package application;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.time.Duration;
+import java.time.Instant;
 
-import org.neo4j.driver.v1.Record;
-
-import cryptography.HashGeneretor;
-import entity.Person;
-import entity.RelationshipType;
-import examples.DataExample;
+import entity.Graph;
 
 public class Main {
 
-	private static boolean RUN_SETUP = false;
-	private static boolean RUN_ADD_NODE = false;
-	private static boolean RUN_ADD_RELATIONSHIP = false;
-	private static boolean RUN_GET_NEIGHBORS = false;
-	private static boolean RUN_UPDATE_CHASH = false;
-	private static boolean RUN_PRINT = true;
-
 	public static void main(String... args) {
 		System.out.println("Start running");
+		Instant startRunnig = Instant.now();
 
+		Instant start, end;
 		Operation op = new Operation();
-		List<Record> result = new ArrayList<>();
+		op.clearDB();
 
-		if (RUN_SETUP) {
-			DataExample.firstSetup(op);
-			System.out.println("Done Setup\n");
-		}
+		start = Instant.now();
+		Graph g = new Graph(Params.NUMBER_OF_NODES, op);
+		end = Instant.now();
+		Duration nodesDuration = Duration.between(start, end);
+		// System.out.println("\nTime to create nodes : " + nodesDuration);
 
-		if (RUN_ADD_NODE) {
-			// test to add one person/new node
-			op.addPerson(new Person("João", "Silva", 28, 1.80, 78));
-			result = op.runGenericExpression("MATCH (a) WHERE a.name = \"João\" OPTIONAL MATCH (a)-[r]->() RETURN a.name, a.surname, a.age, a.height, a.weight, a.mac");
-		}
+		start = Instant.now();
+		g.createRandomRelationships(op);
+		end = Instant.now();
+		Duration relationshipDuration = Duration.between(start, end);
+		// System.out.println("\nTime to create random relationships : " + relationshipDuration);
 
-		if (RUN_ADD_RELATIONSHIP) {
-			// test to add relationships
-			op.addOneWayRelation("João", "Person", "Luana", "Person", RelationshipType.KNOWS);
-			op.addTwoWayRelation("Ari", "Person", "Brunna", "Person", RelationshipType.KNOWS);
-			result = op.runGenericExpression("MATCH (a) RETURN a.name, a.surname, a.age, a.height, a.weight, a.mac");
-		}
+		start = Instant.now();
+		g.addRootNode(op);
+		end = Instant.now();
+		Duration rootDuration = Duration.between(start, end);
+		// System.out.println("\nTime to add root node : " + rootDuration);
 
-		if (RUN_GET_NEIGHBORS) {
-			// test to get neighbors
-			result = op.getNeighborsOf("Fabio");
-			String aHash = result.get(0).get("a.hash", "");
-			String temp = "";
-			System.out.println("aHash = " + aHash);
-			for (Record item : result) {
-				Map<String, Object> map = item.asMap();
-				aHash = (String) map.get("a.hash");
-				temp += map.get("b.hash");
-				System.out.println("aHash = " + aHash);
-				System.out.println("bHash = " + map.get("b.hash"));
-				System.out.println("temp = " + temp);
-			}
-			System.out.println("aHash = " + aHash);
-			System.out.println("temp = " + temp);
-			String aCHash = HashGeneretor.hashPassword(aHash + temp);
-			System.out.println(aCHash);
-			System.out.println("\n");
-		}
+		start = Instant.now();
+		op.updateAllCHashes();
+		end = Instant.now();
+		Duration allHashDuration = Duration.between(start, end);
+		// System.out.println("\nTime to update all hashes : " + allHashDuration);
 
-		if (RUN_UPDATE_CHASH) {
-			//// test update
-			// op.updateCHash("Fabio", true);
-			op.updateAllCHashes();
-		}
+		Instant endRunnig = Instant.now();
+		System.out.println("\nEnd running : " + Duration.between(startRunnig, endRunnig));
 
-		if (RUN_PRINT) {
-			// print
-			// result = op.runGenericExpression("MATCH (a)-[r]->(b) " + "RETURN a.name, r.name, b.name");
-			result = op.runGenericExpression("MATCH (a) RETURN id(a), a.name, a.surname, a.age, a.height, a.weight, a.hash, a.chash");
-			result.forEach(record -> System.out.println(record));
-		}
-
-		System.out.println("\nEnd running");
+		//@formatter:off
+		System.out.println(
+				"\nNumber of Nodes : "+Params.NUMBER_OF_NODES+
+				"\nHash Algorithm : "+Params.HASH_ALGORITHM+
+				"\nTime to create nodes : " + nodesDuration +
+				"\nTime to create random relationships : " + relationshipDuration+
+				"\nTime to add root node : " + rootDuration+
+				"\nTime to update all hashes : " + allHashDuration +
+				"\nTotal Execution Time : "
+				+ nodesDuration.plus(relationshipDuration).plus(rootDuration).plus(allHashDuration)
+				);
+		//@formatter:on
 	}
 }
