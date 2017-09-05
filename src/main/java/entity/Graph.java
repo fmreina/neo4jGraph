@@ -8,51 +8,45 @@ import application.Operation;
 public class Graph {
 
 	private int numberOfNodes;
-	private LinkedList<Node> nodes;
+	private LinkedList<Long> nodeIdList;
 
 	public Graph(int numberOfNodes, Operation op) {
 		this.numberOfNodes = numberOfNodes;
-		this.nodes = new LinkedList<>();
+		this.nodeIdList = new LinkedList<>();
 		this.createNodes(op);
 		// this.createRelationships();
 	}
 
 	private void createNodes(Operation op) {
+		String[] properties = { "name", "number", "type" };
 		for (int i = 0; i < this.numberOfNodes; i++) {
-			Node node = new Node(i, "Nodo " + i);
-			op.createNode(node);
-			this.nodes.add(node);
+			Object[] values = { "node " + i, i, "test" };
+
+			Long nodeId = op.addNode("NODE", properties, values);
+
+			this.nodeIdList.add(nodeId);
 		}
 	}
 
 	public void createRandomRelationships(Operation op) {
-		this.nodes.forEach(node -> {
+		this.nodeIdList.forEach(nodeID -> {
 			Random r = new Random();
 
-			String nodeA = node.getName();
-			String nodeB;
+			Long id1 = nodeID;
+			Long id2;
 			do {
-				int num = r.nextInt(this.numberOfNodes + 1);
+				int num = r.nextInt(this.numberOfNodes);
 
-				nodeB = "Nodo " + num;
-			} while (nodeA.equals(nodeB));
+				id2 = this.nodeIdList.get(num);
 
-			//@formatter:off
-			String expression = "MATCH (a), (b) WITH a, b "
-							  + "WHERE a<>b AND a.name=\"" + nodeA + "\" "
-							  + "AND b.name=\"" + nodeB + "\" "
-							  + "CREATE UNIQUE (a)-[r:KNOWS]->(b)";
-			//@formatter:on
+			} while (id1 == id2);
 
-			// List<Record> result =
-			op.runExpression(expression);
-
-			// this.op.updateCHash(nodeA, true);
+			op.addOneWayRelation(id1, id2, RelationshipType.CONNECTED_TO);
 		});
 	}
 
 	public void addRootNode(Operation op) {
-		op.createRoot(op);
-		op.connectRootToAll(op);
+		Long rootId = op.createRoot(op);
+		op.connectRootToAll(op, rootId);
 	}
 }

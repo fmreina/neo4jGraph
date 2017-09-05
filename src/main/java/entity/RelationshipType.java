@@ -10,7 +10,8 @@ public enum RelationshipType {
 	HAS_NODE("has_node", "HAS_NODE"),
 	SIBLING_OF("sibling_of", "SIBLING_OF"),
 	FRIEND_OF("friend_of", "FRIEND_OF"),
-	KNOWS("knows", "KNOWS");
+	KNOWS("knows", "KNOWS"),
+	CONNECTED_TO("connected_to", "CONNECTED_TO");
 
 	private String name;
 	private String label;
