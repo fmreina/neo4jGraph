@@ -15,8 +15,8 @@ public class Main {
 		Duration nodesDuration = Duration.ZERO;
 		Duration relationshipDuration = Duration.ZERO;
 		Duration rootDuration = Duration.ZERO;
-		Duration readDuration = Duration.ZERO;
 		Duration allHashDuration = Duration.ZERO;
+		Duration allCHashDuration = Duration.ZERO;
 		Operation op = new Operation();
 
 		if (Params.CREATE_NEW_GRAPH) {
@@ -41,12 +41,20 @@ public class Main {
 			System.out.println("\nTime to add root node : " + rootDuration);
 		}
 
-		if (Params.UPDATE_ALL_HASH_CHASH) {
+		if (Params.UPDATE_ALL_HASH) {
 			start = Instant.now();
-			op.updateAllCHashes();
+			op.updateAllHashes();
 			end = Instant.now();
 			allHashDuration = Duration.between(start, end);
 			System.out.println("\nTime to update all hashes : " + allHashDuration);
+		}
+
+		if (Params.UPDATE_ALL_CHASH) {
+			start = Instant.now();
+			op.updateAllCHashes();
+			end = Instant.now();
+			allCHashDuration = Duration.between(start, end);
+			System.out.println("\nTime to update all cHashes : " + allCHashDuration);
 		}
 
 		Instant endRunnig = Instant.now();
@@ -56,11 +64,11 @@ public class Main {
 		System.out.println(
 				"\nNumber of Nodes : "+Params.NUMBER_OF_NODES+
 				"\nHash Algorithm : "+Params.HASH_ALGORITHM+
-				"\nTime to read the graph: "+readDuration+
 				"\nTime to create nodes : " + nodesDuration +
 				"\nTime to create random relationships : " + relationshipDuration+
 				"\nTime to add root node : " + rootDuration+
 				"\nTime to update all hashes : " + allHashDuration +
+				"\nTime to update all cHashes : " + allCHashDuration +
 				"\nTotal Execution Time : "
 				+ nodesDuration.plus(relationshipDuration).plus(rootDuration).plus(allHashDuration)
 				);
